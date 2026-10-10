@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CU-READY</title>
+<style>
+  body { font: 14px -apple-system, sans-serif; margin: 0; padding: 24px; background: #f6f6f6; }
+  h1 { font-size: 18px; margin: 0 0 12px; }
+  #grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .t { height: 64px; border-radius: 10px; background: #fff; border: 1px solid #ddd;
+       display: flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer;
+       user-select: none; transition: background .15s; }
+  .t.small { height: 22px; font-size: 11px; }
+  .t.hit { background: #1f8f4e; color: #fff; }
+  #log { margin-top: 16px; font: 12px ui-monospace, monospace; white-space: pre; height: 160px; overflow: auto;
+         background: #111; color: #9f9; padding: 8px; border-radius: 8px; }
+  input { font-size: 14px; padding: 6px; width: 320px; margin: 12px 0; }
+  #tall { height: 1600px; background: linear-gradient(#f6f6f6, #cde); margin-top: 16px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<h1>Computer-Use accuracy test</h1>
+<input id="field" aria-label="test field" placeholder="type here">
+<div id="grid"></div>
+<div id="log"></div>
+<div id="tall"></div>
+<script>
+  const grid = document.getElementById('grid');
+  const log = document.getElementById('log');
+  let n = 0;
+  for (let i = 1; i <= 24; i++) {
+    const b = document.createElement('button');
+    b.className = 't' + (i > 18 ? ' small' : '');
+    b.textContent = 'T' + i;
+    b.setAttribute('aria-label', 'Target ' + i);
+    b.addEventListener('click', (e) => {
+      n++;
+      b.classList.add('hit');
+      const r = b.getBoundingClientRect();
+      const dx = Math.round(e.clientX - (r.left + r.width / 2));
+      const dy = Math.round(e.clientY - (r.top + r.height / 2));
+      const line = `HIT T${i} n=${n} trusted=${e.isTrusted} detail=${e.detail} off=(${dx},${dy})`;
+      document.title = line;
+      log.textContent = line + '\n' + log.textContent;
+    });
+    grid.appendChild(b);
+  }
+  document.getElementById('field').addEventListener('input', (e) => {
+    document.title = 'FIELD=' + e.target.value;
+  });
+  window.addEventListener('scroll', () => { document.title = 'SCROLL=' + Math.round(window.scrollY); });
+  document.addEventListener('contextmenu', (e) => { document.title = 'CONTEXT'; });
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.DS_Store
+/smooth-computer-use
+*.o
+.build/
+
+# extracted reference assets (not redistributed)
+assets/
+Sources/*.svg
+legacy/Sources_v1/*.svg
