@@ -164,7 +164,7 @@ extension ComputerUse {
         var origin = CGPoint.zero
         Task.detached {
             do {
-                let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+                let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: wantedPid == nil)
                 let filter: SCContentFilter
                 let cfg = SCStreamConfiguration()
                 cfg.showsCursor = false
