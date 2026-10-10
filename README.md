@@ -1,6 +1,8 @@
 # 🖱️ Smooth Computer Use
 
-**专为 Antigravity 和 Cursor 准备的 macOS Computer Use（电脑操控）MCP 服务。**
+**专为 Antigravity 和 Cursor 准备的 macOS Computer Use（电脑操控）Skill。**
+
+> 整个仓库就是一个 Skill：克隆到 skills 目录即可使用，不用改任何配置。
 
 让你的 AI 直接操作 Mac 上的任何 App——点按钮、打字、发消息、滚动、截图——
 **全程在后台进行：不抢你的鼠标、不切走你的前台窗口**，你可以一边继续干活，一边看着一个 Codex 风格的半透明小箭头在屏幕上丝滑地帮你操作。
@@ -16,9 +18,9 @@
 | 🙅 **不抢鼠标** | 事件直接投递给目标进程（per-pid），你的真实鼠标指针纹丝不动；目标窗口被挡住也能点 |
 | 🎯 **点得准** | 优先走无障碍语义（AXPress），按元素编号点击而不是猜坐标；必须用坐标时先做命中测试校验 |
 | 🧈 **够丝滑** | 独立的虚拟光标浮层，跟随屏幕刷新率（CADisplayLink）绘制，最小加加速度轨迹 + 弹簧动画 |
-| ⌨️ **能打字发消息** | 对 Cursor / Chrome / 微信等支持中文输入，`submit=true` 一步「输入 + 回车发送」 |
+| ⌨️ **能打字发消息** | 对 Cursor / Chrome / 微信等支持中文输入，`--enter` 一步「输入 + 回车发送」 |
 | ⚡ **快** | 读取 Cursor 整个界面约 0.4 秒；每次调用最多 10 秒，绝不卡死 |
-| 🔌 **即插即用** | 标准 MCP（stdio），Antigravity / Cursor 填一段配置即可 |
+| 🧩 **即插即用** | 是一个标准 Skill：克隆进 skills 目录就能用，第一次调用自动编译 |
 
 ---
 
@@ -26,17 +28,24 @@
 
 ### 第 1 步：一句话安装
 
-把下面这段话**原样复制**发给你的 Antigravity 或 Cursor：
+把下面这段话**原样复制**发给你的 **Antigravity**：
 
 ```text
-请帮我安装 Smooth Computer Use：
-1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/smooth-computer-use
-2. 进入目录运行 ./build.sh 编译
-3. 运行 ./smooth-computer-use doctor 检查权限，告诉我缺哪些权限
-4. 把它作为 MCP 服务器加入你的 MCP 配置，名字叫 computer-use，
-   command 是 ~/smooth-computer-use/smooth-computer-use 的绝对路径，args 是 ["mcp"]
-完成后告诉我需要怎么重启/刷新 MCP。
+请帮我安装 Smooth Computer Use 这个 Skill：
+1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/.gemini/config/skills/smooth-computer-use
+2. 运行 ~/.gemini/config/skills/smooth-computer-use/cu doctor（第一次会自动编译），告诉我缺哪些权限
 ```
+
+发给 **Cursor** 的版本：
+
+```text
+请帮我安装 Smooth Computer Use 这个 Skill：
+1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/.cursor/skills/smooth-computer-use
+2. 运行 ~/.cursor/skills/smooth-computer-use/cu doctor（第一次会自动编译），告诉我缺哪些权限
+```
+
+> 两个都用？克隆一份，再建个软链接即可：
+> `ln -s ~/.gemini/config/skills/smooth-computer-use ~/.cursor/skills/smooth-computer-use`
 
 ### 第 2 步：授权（只需一次）
 
@@ -47,25 +56,28 @@
 
 勾完后**重启 Antigravity / Cursor**。
 
+> 💡 建议把 `cu` 命令加入终端命令的**自动允许列表**，否则 AI 每操作一步都要你点一次「允许」。
+
 ### 第 3 步：直接说你想干什么
 
 ```text
-用 computer-use 打开计算器，帮我算 2026 × 42
+打开计算器，帮我算 2026 × 42
 ```
 ```text
-用 computer-use 在 Chrome 里打开 B 站，往下滑，点开第一个视频
+在 Chrome 里打开 B 站，往下滑，点开第一个视频
 ```
 ```text
-用 computer-use 在微信里找到「文件传输助手」，发一句：今天的报告写完了
+在微信里找到「文件传输助手」，发一句：今天的报告写完了
 ```
 ```text
-用 computer-use 在 Cursor 的聊天框里发：帮我检查一下 src 目录的类型错误
+在 Cursor 的聊天框里发：帮我检查一下 src 目录的类型错误
 ```
 ```text
-用 computer-use 截一张 Safari 窗口的图，告诉我页面上写了什么
+截一张 Safari 窗口的图，告诉我页面上写了什么
 ```
 
-AI 会自己先读界面（`get_app_state`）→ 找到元素编号 → 点击 / 输入 / 发送，你在旁边看着就行。
+AI 会自动加载这个 Skill：先读界面（`cu state`）→ 找到元素编号 → 点击 / 输入 / 发送，你在旁边看着就行。
+如果它没想起来用，在话前面加一句「用 smooth-computer-use skill」。
 
 ---
 
@@ -74,81 +86,73 @@ AI 会自己先读界面（`get_app_state`）→ 找到元素编号 → 点击 /
 **要求**：macOS 14+（Apple Silicon 或 Intel），Xcode Command Line Tools（`xcode-select --install`）。
 
 ```bash
-git clone https://github.com/syy-shark/smooth-computer-use.git ~/smooth-computer-use
-cd ~/smooth-computer-use
-./build.sh
-./smooth-computer-use doctor     # 检查权限，全部 ✅ 即可
+# Antigravity（全局）
+git clone https://github.com/syy-shark/smooth-computer-use.git ~/.gemini/config/skills/smooth-computer-use
+# Cursor（全局）
+git clone https://github.com/syy-shark/smooth-computer-use.git ~/.cursor/skills/smooth-computer-use
+# 只给某个项目用：克隆到项目里的 .agents/skills/（Antigravity）或 .cursor/skills/（Cursor）
+
+~/.gemini/config/skills/smooth-computer-use/cu doctor   # 自动编译 + 检查权限，全部 ✅ 即可
 ```
 
-### 接入 Antigravity
+更新：在 Skill 目录里 `git pull`，下次调用 `cu` 时会自动重新编译。
 
-Agent 面板 → `…` → **MCP Servers** → **Manage MCP Servers** → **View raw config**，加入：
+### Skill 的结构
 
-```json
-{
-  "mcpServers": {
-    "computer-use": {
-      "command": "/Users/你的用户名/smooth-computer-use/smooth-computer-use",
-      "args": ["mcp"]
-    }
-  }
-}
 ```
-
-### 接入 Cursor
-
-写入 `~/.cursor/mcp.json`（全局）或项目里的 `.cursor/mcp.json`，内容同上。
-然后在 **Settings → MCP** 里确认 `computer-use` 亮绿灯。
-
-> ⚠️ `command` 必须是**绝对路径**。更新代码重新 `./build.sh` 后，记得在 MCP 设置里把它关掉再打开一次。
+smooth-computer-use/
+├── SKILL.md      ← 给 AI 看的说明书：什么时候用、怎么用（看界面 → 按编号操作 → 验证）
+├── cu            ← 启动脚本：第一次自动编译，之后直接运行
+├── build.sh
+└── Sources/      ← Swift 源码
+```
 
 ---
 
-## 🧰 提供给 AI 的工具（MCP Tools）
-
-| 工具 | 作用 |
-|---|---|
-| `list_apps` | 列出正在运行的 App |
-| `get_app_state` | 读取某个 App 窗口的界面结构，每个元素带编号 `[id]` |
-| `click` | 按元素编号 / 文字 / 坐标点击（支持右键、双击） |
-| `type_text` | 输入文字（支持中文），`submit=true` 输入后自动回车发送 |
-| `press_key` | 按键 / 快捷键，如 `return`、`cmd+a`、`cmd+shift+t` |
-| `set_value` | 直接设置输入框、滑块等的值 |
-| `scroll` | 滚动（Chromium/Electron 走后台按键，原生 App 走滚轮） |
-| `drag` | 拖拽 |
-| `hover` | 悬停 |
-| `perform_secondary_action` | 其他无障碍动作，如 `ShowMenu`（右键菜单） |
-| `open_app` / `open_url` | 在后台打开 App / 网址，不抢前台 |
-| `screenshot` | 截取 App 窗口（被挡住也能截）或整个屏幕 |
-| `wait` | 等待界面加载 |
-
----
-
-## 💻 命令行（可选）
-
-不通过 AI 也可以直接用：
+## 💻 命令一览（AI 用的就是这些，你也可以自己在终端里用）
 
 ```bash
-./smooth-computer-use apps                                   # 运行中的 App
-./smooth-computer-use state "Google Chrome"                  # 带编号的界面树
-./smooth-computer-use click --app Calculator --title "7"     # 按文字点击
-./smooth-computer-use click --app "Google Chrome" --id 18    # 按编号点击
-./smooth-computer-use type "你好" --app 微信 --enter          # 输入并回车
-./smooth-computer-use key "cmd+l" --app "Google Chrome"
-./smooth-computer-use scroll --app "Google Chrome" --dy -400
-./smooth-computer-use screenshot --app Safari --out shot.png
-./smooth-computer-use demo                                   # 看光标动画演示
-./smooth-computer-use --help
+cu apps                                         # 运行中的 App
+cu state "Google Chrome" --interactive          # 带编号的界面树（只列可操作控件）
+cu click --app Calculator --title "7"           # 按文字点击
+cu click --app "Google Chrome" --id 18          # 按编号点击（--right 右键 / --double 双击）
+cu type "你好" --app 微信 --id 7 --enter         # 输入并回车发送
+cu key "cmd+l" --app "Google Chrome"            # 快捷键
+cu scroll --app "Google Chrome" --dy -400       # 向下滚动
+cu screenshot --app Safari --out /tmp/shot.png  # 截窗口（被挡住也行）
+cu open-url "https://www.bilibili.com" --app "Google Chrome"
+cu demo                                         # 看光标动画演示
+cu --help
 ```
 
 全局参数：`--speed 1.0`（光标速度）、`--no-cursor`（不显示虚拟光标）。
 
 ---
 
+## 🔌 也可以当 MCP 用（可选）
+
+不想用 Skill 的话，同一个程序也是标准 MCP 服务器（stdio）。在 Antigravity 的 MCP 原始配置或 Cursor 的 `~/.cursor/mcp.json` 里加入：
+
+```json
+{
+  "mcpServers": {
+    "computer-use": {
+      "command": "/绝对路径/smooth-computer-use/smooth-computer-use",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+（先运行一次 `cu doctor` 生成 `smooth-computer-use` 二进制。）
+提供的工具：`list_apps`、`get_app_state`、`click`、`type_text`（`submit=true` 回车发送）、`press_key`、`set_value`、`scroll`、`drag`、`hover`、`perform_secondary_action`、`open_app`、`open_url`、`screenshot`、`wait`。
+
+---
+
 ## 🏗️ 工作原理
 
 ```
-Antigravity / Cursor ──MCP(stdio)──▶ smooth-computer-use mcp
+Antigravity / Cursor ──Skill: cu 命令 / 或 MCP──▶ smooth-computer-use
                                           │  Unix socket
                                           ▼
                                    常驻 daemon（空闲 30 分钟自动退出）
