@@ -1,255 +1,257 @@
 <div align="center">
 
+**简体中文** · [English](README_en.md)
+
 # Smooth Computer Use
 
-### Non-intrusive, display-synchronized computer control engine for macOS agents.
+### 专为 macOS Agent 构建的非侵入式、显示同步计算机操控引擎。
 
-**Engineered as a native Skill for Google Antigravity and Cursor.**
+**专为 Google Antigravity 与 Cursor 原生设计的 Agent Skill。**
 
-[![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-black?style=flat-square&logo=apple&logoColor=white)](#requirements)
-[![Swift](https://img.shields.io/badge/language-Swift%205-F05138?style=flat-square&logo=swift&logoColor=white)](#requirements)
-[![Interface](https://img.shields.io/badge/interface-Agent%20Skill-5c4ee5?style=flat-square)](#quick-start)
-[![Protocol](https://img.shields.io/badge/protocol-MCP%20stdio-blue?style=flat-square)](#mcp-server-optional)
-[![License](https://img.shields.io/badge/license-MIT-f4c430?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/平台-macOS%2014%2B-black?style=flat-square&logo=apple&logoColor=white)](#系统要求)
+[![Swift](https://img.shields.io/badge/语言-Swift%205-F05138?style=flat-square&logo=swift&logoColor=white)](#系统要求)
+[![Interface](https://img.shields.io/badge/接口-Agent%20Skill-5c4ee5?style=flat-square)](#快速开始)
+[![Protocol](https://img.shields.io/badge/协议-MCP%20stdio-blue?style=flat-square)](#mcp-服务器可选)
+[![License](https://img.shields.io/badge/协议-MIT-f4c430?style=flat-square)](LICENSE)
 
-[Quick start](#quick-start) · [Core characteristics](#core-characteristics) · [Architecture](#architecture) · [Command reference](#command-reference) · [MCP server](#mcp-server-optional) · [Limitations](#limitations)
+[快速开始](#快速开始) · [核心特性](#核心特性) · [系统架构](#系统架构) · [命令速查](#命令速查) · [MCP 服务器](#mcp-服务器可选) · [局限性说明](#局限性说明)
 
 </div>
 
 ---
 
-Conventional visual Computer Use mechanisms seize the user's hardware pointer, steal frontmost focus, and introduce jarring coordinate snapping. Any user interaction concurrent with an agent invocation results in race conditions and missed clicks.
+传统的视觉 Computer Use 机制通常直接抢占用户的硬件鼠标指针、强制前台激活窗口，并产生突兀的坐标瞬移。只要用户在 Agent 执行任务期间操作机器，就会造成输入竞态与点击失准。
 
-Smooth Computer Use decouples the agent's actions from physical hardware input. Built directly against macOS private graphics subsystems (`SkyLight`) and semantic accessibility primitives (`AXUIElement`), it executes complete desktop control workflows entirely in the background while rendering an independent, display-synchronized virtual cursor overlay.
+Smooth Computer Use 将 Agent 操作与物理硬件输入彻底解耦。本引擎直接基于 macOS 底层私有图形子系统（`SkyLight`）与语义无障碍原语（`AXUIElement`）构建，能够在纯后台环境下完成全套桌面应用控制工作流；同时，独立的半透明虚拟光标层以硬件刷新率同步渲染顺滑的拟人轨迹。
 
-The repository is structured as a self-contained Agent Skill: cloning it into your agent's skill path provides immediate capability without external runtime dependencies.
+本仓库本身即是一个自包含的标准 Agent Skill：将其克隆至 Agent 的技能目录即可立即生效，无需安装任何额外运行时依赖。
 
 ---
 
-## Core characteristics
+## 核心特性
 
-| Dimension | Mechanism | Guarantee |
+| 维度 | 机制 | 效果保障 |
 |---|---|---|
-| Hardware Pointer Decoupling | Process-isolated input routing (`SLEventPostToPid`) | The physical mouse pointer remains completely undisturbed. |
-| Window Focus Isolation | Window-targeted synthetic activation (`SLPSPostEventRecordTo`) | Target windows receive input without window raising or stealing active workspace focus. |
-| Hit Precision | Semantic execution first (`AXPress`), validated local coordinates second | Zero coordinate guessing; hits are verified against accessibility frame boundaries. |
-| Visual Continuity | `CADisplayLink` hardware v-sync + minimum-jerk trajectory planning | Agent cursor moves along natural cubic paths with inertial tilt and spring physics. |
-| Text & Dispatch | Chunked Unicode key events + synthetic focus recovery | Instant Chinese and Latin text input; single-step text entry and submission (`--enter`). |
-| Deterministic Latency | Strict per-element messaging timeouts (250 ms) and 10 s call bounds | Immune to Electron / Chromium accessibility tree hangs; UI parsing completes in <0.5 s. |
-| Self-bootstrapping | Native Swift architecture with an automated `cu` bootstrap wrapper | Zero Python / Node / pip dependencies; compiles on first invocation automatically. |
+| 物理指针解耦 | 进程隔离事件投递（`SLEventPostToPid`） | 用户的物理鼠标指针完全不受干扰，自由移动。 |
+| 窗口焦点隔离 | 目标窗口合成激活（`SLPSPostEventRecordTo`） | 目标窗口在后台直接接收事件，不抬升层级、不剥夺当前前台激活态。 |
+| 命中精度保障 | 语义动作优先（`AXPress`），命中测试校验像素点居次 | 告别盲目坐标猜测；操作均基于无障碍边界框架与命中测试实时校验。 |
+| 视觉连续性 | `CADisplayLink` 硬件级 V-Sync + 最小加加速度轨迹规划 | 虚拟光标沿三次曲线自然平滑滑动，伴随切向倾角与阻尼弹簧物理响应。 |
+| 文本流式输入 | 分块 Unicode 按键事件 + 合成焦点保护 | 极速中英文字符流式输入；支持单步完成键入与回车提交（`--enter`）。 |
+| 确定性延迟控制 | 单元素查询严格超时（250 ms）与单次调用硬上限（10 s） | 彻底免疫 Electron / Chromium 复杂的无障碍树挂起，UI 解析耗时低于 0.5 秒。 |
+| 零依赖自举 | 原生 Swift 架构与自动化 `cu` 引导外壳 | 无 Python / Node / pip 依赖；首次调用自动检测并完成增量编译。 |
 
 ---
 
-## Quick start
+## 快速开始
 
-### 1. Register with your agent
+### 1. 向你的 Agent 注册
 
-Send the corresponding instruction block directly to your agent in chat.
+将对应环境的指令块原样复制并发送给你的 Agent：
 
-#### For Google Antigravity
-
-```text
-Please install the Smooth Computer Use skill:
-1. Clone https://github.com/syy-shark/smooth-computer-use to ~/.gemini/config/skills/smooth-computer-use
-2. Run ~/.gemini/config/skills/smooth-computer-use/cu doctor to verify permissions.
-```
-
-#### For Cursor
+#### 适用于 Google Antigravity
 
 ```text
-Please install the Smooth Computer Use skill:
-1. Clone https://github.com/syy-shark/smooth-computer-use to ~/.cursor/skills/smooth-computer-use
-2. Run ~/.cursor/skills/smooth-computer-use/cu doctor to verify permissions.
+请帮我安装 Smooth Computer Use 这个 Skill：
+1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/.gemini/config/skills/smooth-computer-use
+2. 运行 ~/.gemini/config/skills/smooth-computer-use/cu doctor 验证环境与权限。
 ```
 
-> **Shared installation**: If using both environments, clone to one path and link to the other:
+#### 适用于 Cursor
+
+```text
+请帮我安装 Smooth Computer Use 这个 Skill：
+1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/.cursor/skills/smooth-computer-use
+2. 运行 ~/.cursor/skills/smooth-computer-use/cu doctor 验证环境与权限。
+```
+
+> **双环境共享安装**：若需在两套环境中同时使用，只需克隆至一处并建立软链接：
 > ```bash
 > ln -s ~/.gemini/config/skills/smooth-computer-use ~/.cursor/skills/smooth-computer-use
 > ```
 
 ---
 
-### 2. Grant macOS privacy permissions
+### 2. 授予 macOS 隐私权限
 
-Open **System Settings -> Privacy & Security** and confirm that the host application running your agent (**Antigravity**, **Cursor**, or your **Terminal**) is enabled under:
+打开「系统设置 -> 隐私与安全性」，确保运行 Agent 的宿主应用（**Antigravity**、**Cursor** 或使用的**终端**）已在以下权限列表中开启授权：
 
-- **Accessibility**: Required for accessibility hierarchy inspection, semantic actions, and per-process key injection.
-- **Screen Recording**: Required for background window frame captures and coordinate fallbacks.
+- **辅助功能（Accessibility）**：用于解析应用 UI 结构树、执行语义点击与后台按键流注入。
+- **屏幕录制（Screen Recording）**：用于后台窗口画面截取以及无障碍缺失时的坐标兜底。
 
-Restart the host application after modifying permission toggles.
+修改授权状态后，请重启宿主应用。
 
-*Tip*: Add the `cu` executable to your agent tool auto-allow list to prevent interactive approval prompts on each execution step.
-
----
-
-### 3. Usage examples
-
-Once registered, instruct your agent using natural language:
-
-```text
-Open Calculator and calculate 2026 * 42.
-```
-
-```text
-In Google Chrome, navigate to bilibili.com, scroll down, and open the first video.
-```
-
-```text
-In WeChat, select "File Transfer" and send: "Deployment verification complete."
-```
-
-```text
-Focus Cursor chat input and submit: "Review src/engine for potential memory leaks."
-```
-
-```text
-Capture a background screenshot of Safari and describe the content of the active tab.
-```
-
-The agent executes the loop defined in `SKILL.md`: `Inspect UI state -> Locate element identifier -> Execute atomic action -> Verify outcome`.
+*建议*：可将 `cu` 命令加入 Agent 终端工具的自动允许列表，避免每一步执行均弹出交互式放行弹窗。
 
 ---
 
-## Architecture
+### 3. 操作示例
+
+注册完成后，直接通过自然语言下达控制指令：
+
+```text
+打开计算器，帮我计算 2026 * 42。
+```
+
+```text
+在 Google Chrome 中打开 bilibili.com，向下滑动页面，并打开第一个视频。
+```
+
+```text
+在微信中找到“文件传输助手”，发送：“部署验证已全部通过。”
+```
+
+```text
+在 Cursor 聊天输入框中输入并提交：“请审查 src/engine 模块中的潜在内存泄露。”
+```
+
+```text
+在后台截取一张 Safari 窗口的屏幕截图，并概括当前激活标签页的内容。
+```
+
+Agent 将自动依据 `SKILL.md` 规范执行操作闭环：`检查界面状态 -> 定位元素索引 -> 执行原子动作 -> 校验执行结果`。
+
+---
+
+## 系统架构
 
 ```
-Agent Environment (Antigravity / Cursor)
+Agent 宿主环境 (Antigravity / Cursor)
       │
-      │  Executes skill command (or JSON-RPC via stdio)
+      │  执行 Skill 命令（或通过 stdio 进行 JSON-RPC 交互）
       ▼
-   cu wrapper (Auto-builds native binary on first use)
+   cu 启动包装器 (首次调用自动编译原生二进制)
       │
-      │  Local domain socket (/tmp/smooth-cu-<uid>.sock)
+      │  本地 Unix 域套接字 (/tmp/smooth-cu-<uid>.sock)
       ▼
-smooth-computer-use daemon (Persistent daemon, idle-terminates after 30 min)
-   ├── Accessibility Engine (AXEngine)
-   │     ├── Fast tree snapshot with AXManualAccessibility priming
-   │     ├── Element search and verified boundary hit-testing
-   │     └── Direct semantic action execution (AXPress, AXScrollToVisible)
-   ├── Background Input Dispatcher (SkyLight SPIs)
-   │     ├── Process-isolated mouse down/up/drag via SLEventPostToPid
-   │     ├── Synthetic window focus preservation without z-order changes
-   │     └── Chunked Unicode key injection & modifier chord translation
-   └── Cursor Overlay Subsystem
-         ├── Multi-display click-through overlay windows at .screenSaver level
-         ├── CADisplayLink 60/120 Hz render pump
-         └── Minimum-jerk motion curves, inertial banking, and spring dynamics
+smooth-computer-use 常驻守护进程 (空闲 30 分钟自动退出)
+   ├── 无障碍语义引擎 (AXEngine)
+   │     ├── 带 AXManualAccessibility 预热的高速结构树快照
+   │     ├── 元素检索与边界框架命中测试实时校验
+   │     └── 直接执行语义动作 (AXPress, AXScrollToVisible)
+   ├── 后台输入分发器 (SkyLight SPIs)
+   │     ├── 基于 SLEventPostToPid 的进程隔离鼠标动作注入
+   │     ├── 不改变窗口 Z 序的合成焦点状态维护
+   │     └── 分块 Unicode 按键流注入与组合键转换
+   └── 光标浮层子系统 (Cursor Overlay Subsystem)
+         ├── 位于 .screenSaver 级别的多屏穿透无干扰浮层窗口
+         ├── CADisplayLink 60/120 Hz 刷新率驱动渲染泵
+         └── 最小加加速度曲线、惯性倾角与弹簧动力学模型
 ```
 
-### Action delivery ladder
+### 动作分发降级阶梯
 
-Actions execute down a strict degradation hierarchy to guarantee safety:
+为确保操作可靠性，动作执行遵循严格的降级阶梯：
 
-1. **Semantic Execution (`AXPress`)**: Resolves the element in the accessibility graph and triggers its action handler directly. Instantaneous, zero coordinate drift.
-2. **Background Process-Targeted Synthesized Events**: When an element does not implement semantic actions, the engine locates the target window, verifies coordinates with a hit-test, establishes a synthetic focus frame, and injects window-local events via private SkyLight SPIs.
-3. **Foreground Event Fallback**: Available only when explicitly requested (`--mode foreground`). Never invoked by default.
+1. **语义执行（`AXPress`）**：在无障碍语义树中精确定位元素并直接调用其动作处理程序。速度极快，零坐标偏移。
+2. **后台目标进程合成事件**：当控件未暴露标准语义动作时，引擎定位目标窗口，通过命中测试校验坐标，建立合成焦点上下文，并通过私有 `SkyLight` SPI 投递窗口相对坐标事件。
+3. **前台事件兜底**：仅在显式传入 `--mode foreground` 参数时启用。默认配置下永不触发。
 
 ---
 
-## Command reference
+## 命令速查
 
-The agent communicates with the daemon via the `cu` binary. All commands can also be invoked directly from the terminal:
+Agent 统一通过 `cu` 与守护进程通信。用户亦可在终端中直接调用该命令：
 
 ```bash
-# State inspection
-cu apps                                         # List running applications and window ownership
-cu state "Google Chrome" --interactive          # Numbered UI control tree (compact interactive mode)
-cu state Cursor --window "smooth-computer-use"  # Inspect a specific window title
-cu screenshot --app Safari --out /tmp/win.png   # Background window screenshot (works when covered)
-cu doctor                                       # Permission and display diagnostic audit
+# 状态检查
+cu apps                                         # 列出运行中的应用与窗口归属
+cu state "Google Chrome" --interactive          # 读取带编号的 UI 控件树 (紧凑交互模式)
+cu state Cursor --window "smooth-computer-use"  # 检查指定标题的窗口
+cu screenshot --app Safari --out /tmp/win.png   # 后台窗口截图 (被遮挡状态依然有效)
+cu doctor                                       # 权限与多显示器环境诊断
 
-# Target interaction
-cu click --app Calculator --title "7"           # Semantic or coordinate click by label
-cu click --app "Google Chrome" --id 18          # Click element by index from `cu state`
-cu click 450 320 --app Slack                    # Click window-relative screen coordinates
-cu click --app Finder --id 4 --double           # Double-click target
-cu click --app Notes --id 12 --right            # Context click (right click)
+# 目标操作
+cu click --app Calculator --title "7"           # 按名称进行语义或坐标点击
+cu click --app "Google Chrome" --id 18          # 按 `cu state` 中的序号点击元素
+cu click 450 320 --app Slack                    # 点击相对于窗口的屏幕物理点
+cu click --app Finder --id 4 --double           # 目标双击
+cu click --app Notes --id 12 --right            # 目标右键菜单
 
-# Text & keyboard entry
-cu type "Hello world" --app Notes --id 3        # Focus target and type text
-cu type "npm test" --app Cursor --id 48 --enter # Type text and dispatch Return key
-cu key "cmd+l" --app "Google Chrome"            # Dispatch key combination
-cu key "down" --app "Google Chrome" --repeat 5  # Repeated navigation key dispatch
-cu set-value "100" --app Settings --id 9        # Direct accessibility value override
+# 文本与键盘输入
+cu type "Hello world" --app Notes --id 3        # 聚焦控件并输入文本
+cu type "npm test" --app Cursor --id 48 --enter # 键入文本并派发 Return 回车提交
+cu key "cmd+l" --app "Google Chrome"            # 发送组合快捷键
+cu key "down" --app "Google Chrome" --repeat 5  # 连续派发导航方向键
+cu set-value "100" --app Settings --id 9        # 直接覆写无障碍属性值
 
-# Layout & gestures
-cu scroll --app "Google Chrome" --dy -400       # Vertical scroll (-down / +up)
-cu drag 200 300 600 300 --app Keynote           # Drag from coordinate A to coordinate B
-cu hover --app "Google Chrome" --id 14          # Trigger hover states
+# 视口滚动与手势
+cu scroll --app "Google Chrome" --dy -400       # 垂直滚动 (-向下 / +向上)
+cu drag 200 300 600 300 --app Keynote           # 从点 A 拖拽至点 B
+cu hover --app "Google Chrome" --id 14          # 触发悬停状态
 
-# Motion & server lifecycle
-cu demo                                         # Trajectory and spring animation visual demonstration
-cu stop                                         # Terminate running background daemon
+# 动效与进程管理
+cu demo                                         # 轨迹规划与弹簧物理效果视觉演示
+cu stop                                         # 终止后台常驻守护进程
 ```
 
-**Global flags**:
-- `--no-cursor`: Suppress the visual virtual cursor overlay.
-- `--speed <float>`: Multiplier for trajectory movement speed (default: `1.0`).
+**全局参数**：
+- `--no-cursor`：关闭可视化的虚拟光标浮层。
+- `--speed <float>`：轨迹移动速度倍率（默认值：`1.0`）。
 
 ---
 
-## MCP server (Optional)
+## MCP 服务器（可选）
 
-In addition to acting as an Agent Skill, `smooth-computer-use` exposes a standard Model Context Protocol (MCP) server over `stdio`.
+除作为 Agent Skill 外，`smooth-computer-use` 同时支持通过标准 `stdio` 暴露 Model Context Protocol（MCP）服务。
 
-### Configuration
+### 配置方式
 
-Add the following definition to your MCP configuration file (`~/.cursor/mcp.json` for Cursor, or Antigravity MCP settings):
+在你的 MCP 配置文件中（Cursor 对应 `~/.cursor/mcp.json`，或 Antigravity 的 MCP 原生配置项）加入以下声明：
 
 ```json
 {
   "mcpServers": {
     "computer-use": {
-      "command": "/absolute/path/to/smooth-computer-use/smooth-computer-use",
+      "command": "/绝对路径/smooth-computer-use/smooth-computer-use",
       "args": ["mcp"]
     }
   }
 }
 ```
 
-*(Ensure the binary is compiled prior to MCP registration by running `./cu doctor` once).*
+*（首次配置前请先运行一次 `./cu doctor` 生成二进制可执行文件）。*
 
-### Supported MCP tools
+### 支持的 MCP 工具列表
 
-- `list_apps`: Enumerate active desktop applications.
-- `get_app_state`: Retrieve structured accessibility nodes with sequential index IDs.
-- `click`: Target click by ID, text query, or coordinate pair.
-- `type_text`: Unicode text injection with automatic focus acquisition and optional `submit` (Return key).
-- `press_key`: Key chords and navigation strokes (`cmd+c`, `return`, `escape`).
-- `set_value`: Assign programmatic values to UI inputs.
-- `scroll`: Adaptive viewport scrolling.
-- `drag`: Coordinate-bounded dragging.
-- `hover`: Pointer position inspection.
-- `perform_secondary_action`: Accessibility actions (`AXShowMenu`, `AXIncrement`, etc.).
-- `open_app` / `open_url`: Background application launch or URL navigation.
-- `screenshot`: Window or display frame capture.
-- `wait`: Temporal UI synchronization.
-
----
-
-## Requirements
-
-- **Operating System**: macOS 14.0 (Sonoma) or later (Apple Silicon & Intel supported).
-- **Toolchain**: Xcode Command Line Tools (`xcode-select --install`).
-- **Dependencies**: None. Pure Swift utilizing ApplicationServices, CoreGraphics, Cocoa, and ScreenCaptureKit.
+- `list_apps`：枚举当前运行的桌面应用程序。
+- `get_app_state`：获取带有顺序 ID 的结构化无障碍树节点。
+- `click`：支持通过 ID、文本查询或坐标对目标发起点击。
+- `type_text`：具备自动焦点获取机制的 Unicode 文本注入，支持 `submit` 回车提交。
+- `press_key`：常用按键与组合快捷键派发（`cmd+c`、`return`、`escape` 等）。
+- `set_value`：直接修改控件值。
+- `scroll`：自适应视口滚动。
+- `drag`：坐标范围拖拽。
+- `hover`：光标悬停检查。
+- `perform_secondary_action`：调用特定无障碍辅助动作（`AXShowMenu`、`AXIncrement` 等）。
+- `open_app` / `open_url`：后台启动应用程序或打开目标 URL。
+- `screenshot`：窗口或全屏捕获。
+- `wait`：UI 渲染时序等待。
 
 ---
 
-## Limitations
+## 系统要求
 
-- Pure Canvas / WebGL surfaces: Applications rendering through raw bitmap canvas without exposing accessibility trees cannot provide semantic node IDs. Interaction must fall back to coordinate clicks derived from screenshots.
-- Chromium scroll semantics: Chromium drops background wheel events at the compositor layer on macOS. Scrolling in Chromium targets is fulfilled via background key sequences or `AXScrollToVisible` element traversal.
-- Drag & Drop: Drag fidelity across distinct process boundaries is subject to target application synthetic drop recognition.
-
----
-
-## Acknowledgments
-
-- Architectural concepts inspired by reverse-engineering analysis of modern desktop agent runners.
-- Event routing and synthetic focus mechanisms informed by open research in [trycua/cua](https://github.com/trycua/cua) (MIT) and [yabai](https://github.com/koekeishiya/yabai) (MIT).
+- **操作系统**：macOS 14.0 (Sonoma) 或更高版本（完整支持 Apple Silicon 与 Intel 架构）。
+- **工具链**：Xcode Command Line Tools（可通过 `xcode-select --install` 安装）。
+- **外部依赖**：无。纯原生 Swift 实现，直接依赖 ApplicationServices、CoreGraphics、Cocoa 及 ScreenCaptureKit 原生框架。
 
 ---
 
-## License
+## 局限性说明
+
+- **纯 Canvas / WebGL 界面**：直接在 Canvas 上自绘制且未暴露无障碍语义的界面，无法提取语义节点 ID，必须降级为基于截图判读的像素坐标点击。
+- **Chromium 滚动语义**：Chromium 在 macOS 的渲染合成层会主动丢弃后台滚轮事件。对 Chromium 系应用，滚动通过后台方向键序列或 `AXScrollToVisible` 遍历显露容器完成。
+- **跨进程拖放**：跨越不同进程边界的拖放动作依赖目标应用对合成拖拽生命周期的支持程度。
+
+---
+
+## 致谢
+
+- 架构灵感源于对现代桌面 Agent Runner 运行机制的逆向工程解析。
+- 后台事件路由与合成焦点设计参考了 [trycua/cua](https://github.com/trycua/cua)（MIT）与 [yabai](https://github.com/koekeishiya/yabai)（MIT）的公开技术研究。
+
+---
+
+## 开源协议
 
 [MIT](LICENSE) © 2026 syy-shark
