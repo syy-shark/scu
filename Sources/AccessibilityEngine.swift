@@ -206,14 +206,46 @@ public final class AXEngine {
         return result
     }
 
+    public func ensureOnScreen(_ window: AXUIElement) {
+        let f = AXEngine.frame(of: window)
+        guard f.width > 20 && f.height > 20 else { return }
+        let screens = NSScreen.screens.map { CoordinateSpace.cgRect(fromCocoa: $0.frame) }
+        let visible = screens.contains { $0.intersects(f) && !$0.intersection(f).isNull && $0.intersection(f).width > 40 }
+        if !visible, let main = screens.first {
+            var targetPt = CGPoint(x: min(max(main.minX + 100, 100), main.maxX - f.width - 40),
+                                   y: min(max(main.minY + 80, 80), main.maxY - f.height - 40))
+            if let val = AXValueCreate(.cgPoint, &targetPt) {
+                AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, val)
+                usleep(30_000)
+            }
+        }
+    }
+
     public func mainWindow(of app: NSRunningApplication, titleContains: String? = nil) throws -> AXUIElement {
-        let ws = windows(of: app).filter { AXEngine.frame(of: $0).width > 60 }
+        var ws = windows(of: app).filter { AXEngine.frame(of: $0).width > 60 }
+        if ws.isEmpty {
+            // App is running in background without open windows (e.g. closed WeChat window in dock)
+            if let url = app.bundleURL {
+                let cfg = NSWorkspace.OpenConfiguration()
+                cfg.activates = false
+                let sem = DispatchSemaphore(value: 0)
+                NSWorkspace.shared.openApplication(at: url, configuration: cfg) { _, _ in sem.signal() }
+                _ = sem.wait(timeout: .now() + 0.5)
+                usleep(100_000)
+                ws = windows(of: app).filter { AXEngine.frame(of: $0).width > 60 }
+            }
+        }
+        let picked: AXUIElement
         if let t = titleContains?.lowercased(), !t.isEmpty,
            let w = ws.first(where: { AXEngine.string(AXEngine.attr($0, kAXTitleAttribute)).lowercased().contains(t) }) {
-            return w
+            picked = w
+        } else if let w = ws.first {
+            picked = w
+        } else {
+            throw AXEngineError.noWindow(app.localizedName ?? "\(app.processIdentifier)")
         }
-        if let w = ws.first { return w }
-        throw AXEngineError.noWindow(app.localizedName ?? "\(app.processIdentifier)")
+        ensureOnScreen(picked)
+        return picked
     }
 
     // MARK: Snapshot

@@ -46,7 +46,7 @@ extension ComputerUse {
         caption("\(verb) \(label(node))")
         moveCursor(point, width: max(8, min(frame.width, frame.height)))
         pressVisual(true)
-        defer { usleep(70_000); pressVisual(false) }
+        defer { usleep(25_000); pressVisual(false) }
 
         let titleBefore = ax.windowTitle(pid: pid)
         var method = ""
@@ -64,7 +64,7 @@ extension ComputerUse {
         } else {
             return .fail("no window found for element")
         }
-        usleep(120_000)
+        usleep(25_000)
         let titleAfter = ax.windowTitle(pid: pid)
         var text = "\(verb)ed [\(node.index)] \(ax.describe(node.element)) at (\(Int(point.x)),\(Int(point.y))) via \(method)"
         if titleAfter != titleBefore && !titleAfter.isEmpty { text += "\nwindow title is now: \(titleAfter)" }
@@ -78,7 +78,7 @@ extension ComputerUse {
         caption("\(button == .right ? "Right-click" : "Click") \(AXEngine.clip(hitDesc, 28))")
         moveCursor(p)
         pressVisual(true)
-        defer { usleep(70_000); pressVisual(false) }
+        defer { usleep(25_000); pressVisual(false) }
 
         var method = "background-pixel"
         if mode == .foreground {
@@ -102,7 +102,7 @@ extension ComputerUse {
                 BackgroundInput.click(at: p, target: target, button: button, count: count)
             }
         }
-        usleep(100_000)
+        usleep(25_000)
         return ActionResult(ok: true, text: "Clicked (\(Int(p.x)),\(Int(p.y))) on \(hitDesc) [\(target.ownerName)] via \(method)",
                             data: ["method": method])
     }

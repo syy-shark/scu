@@ -63,11 +63,20 @@ Global flags: `--no-cursor` (hide overlay), `--speed 1.5`.
 ## Recipes
 
 **Send a chat message (WeChat / Cursor / Slack / Telegram…)**
+
+*Fast keyboard route (WeChat / Slack, instant & zero-coordinate)*:
 ```bash
-cu state "微信" --interactive          # find the contact / input box
-cu click --app "微信" --title "文件传输助手"
-cu state "微信" --interactive          # find the message input id
-cu type "今天的报告写完了" --app "微信" --id <input> --enter
+cu key "cmd+f" --app 微信
+cu type "文件传输助手" --app 微信 --enter   # opens conversation & focuses message input
+cu type "今天的报告写完了" --app 微信 --enter # submits directly
+```
+
+*Generic UI route (Cursor / Web / Discord)*:
+```bash
+cu state "<App>" --interactive             # find the contact or input box
+cu click --app "<App>" --title "Contact"
+cu state "<App>" --interactive             # find the message input id
+cu type "Hello" --app "<App>" --id <input> --enter
 ```
 For Cursor's chat: the input is usually `TextArea "Prompt"` → `cu type "…" --app Cursor --id <id> --enter`.
 

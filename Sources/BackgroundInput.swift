@@ -101,9 +101,9 @@ public enum BackgroundInput {
         }
         let userWindow = keyWindowID(of: userPid) ?? 0
         let previous = SkyLight.focusWithoutRaise(pid: target.pid, window: target.windowID)
-        usleep(40_000)   // let AppKit/Chromium update their key-window routing
+        usleep(12_000)   // let AppKit/Chromium update their key-window routing
         let result = body()
-        usleep(35_000)
+        usleep(10_000)
         if let prev = previous, userWindow != 0 {
             SkyLight.restoreFocus(previous: prev, previousWindow: userWindow, targetPid: target.pid, targetWindow: target.windowID)
         }
@@ -164,9 +164,11 @@ public enum BackgroundInput {
                 stamp(mv, target: target, point: point, phase: 2, clickState: 0, button: button, group: group, flags: flags)
                 send(mv, target)
             }
-            usleep(15_000)
-            // 2. off-screen primer pair: opens Chromium's user-activation gate without hitting the DOM
-            if isLeft {
+            usleep(6_000)
+            let app = NSRunningApplication(processIdentifier: target.pid)
+            let isChromium = app.map { AXEngine.isChromiumLike($0) } ?? false
+            // 2. off-screen primer pair: only Chromium needs this to bypass user-activation gate
+            if isLeft && isChromium {
                 let off = CGPoint(x: -1, y: -1)
                 if let d = makeMouse(button.down, off, button) {
                     stamp(d, target: target, point: off, phase: 1, clickState: 1, button: button, group: group, flags: flags)
@@ -177,7 +179,7 @@ public enum BackgroundInput {
                     stamp(u, target: target, point: off, phase: 2, clickState: 1, button: button, group: group, flags: flags)
                     send(u, target)
                 }
-                usleep(90_000)
+                usleep(15_000)
             }
             // 3. the real click(s)
             for i in 1...max(1, min(count, 3)) {
@@ -185,12 +187,12 @@ public enum BackgroundInput {
                     stamp(d, target: target, point: point, phase: 3, clickState: Int64(i), button: button, group: group, flags: flags)
                     send(d, target)
                 }
-                usleep(isLeft ? 30_000 : 40_000)
+                usleep(isLeft ? 12_000 : 18_000)
                 if let u = makeMouse(button.up, point, button) {
                     stamp(u, target: target, point: point, phase: 3, clickState: Int64(i), button: button, group: group, flags: flags)
                     send(u, target)
                 }
-                if i < count { usleep(70_000) }
+                if i < count { usleep(25_000) }
             }
         }
     }

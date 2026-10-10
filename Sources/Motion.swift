@@ -24,12 +24,12 @@ public enum Motion {
     }
 
     /// Fitts'-law flavoured duration (seconds) for a move of `distance` points
-    /// towards a target `width` points wide.
+    /// towards a target `width` points wide. Snappy & fluid.
     public static func duration(distance: CGFloat, targetWidth: CGFloat = 28, speed: Double = 1.0) -> Double {
         guard distance > 0.5 else { return 0 }
         let id = log2(1 + Double(distance) / Double(max(targetWidth, 8)))
-        let t = 0.17 + 0.075 * id
-        return min(max(t / max(speed, 0.1), 0.16), 0.70)
+        let t = 0.08 + 0.035 * id
+        return min(max(t / max(speed, 0.1), 0.06), 0.32)
     }
 }
 
