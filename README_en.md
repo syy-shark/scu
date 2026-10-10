@@ -2,8 +2,7 @@
 
 [简体中文](README.md) · **English**
 
-
-# Smooth Computer Use
+# SCU
 
 ### Non-intrusive, display-synchronized computer control engine for macOS agents.
 
@@ -12,10 +11,9 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-black?style=flat-square&logo=apple&logoColor=white)](#requirements)
 [![Swift](https://img.shields.io/badge/language-Swift%205-F05138?style=flat-square&logo=swift&logoColor=white)](#requirements)
 [![Interface](https://img.shields.io/badge/interface-Agent%20Skill-5c4ee5?style=flat-square)](#quick-start)
-[![Protocol](https://img.shields.io/badge/protocol-MCP%20stdio-blue?style=flat-square)](#mcp-server-optional)
 [![License](https://img.shields.io/badge/license-MIT-f4c430?style=flat-square)](LICENSE)
 
-[Quick start](#quick-start) · [Core characteristics](#core-characteristics) · [Architecture](#architecture) · [Command reference](#command-reference) · [MCP server](#mcp-server-optional) · [Limitations](#limitations)
+[Quick start](#quick-start) · [Core characteristics](#core-characteristics) · [Architecture](#architecture) · [Command reference](#command-reference) · [Requirements](#requirements) · [Limitations](#limitations)
 
 </div>
 
@@ -23,7 +21,7 @@
 
 Conventional visual Computer Use mechanisms seize the user's hardware pointer, steal frontmost focus, and introduce jarring coordinate snapping. Any user interaction concurrent with an agent invocation results in race conditions and missed clicks.
 
-Smooth Computer Use decouples the agent's actions from physical hardware input. Built directly against macOS private graphics subsystems (`SkyLight`) and semantic accessibility primitives (`AXUIElement`), it executes complete desktop control workflows entirely in the background while rendering an independent, display-synchronized virtual cursor overlay.
+**SCU (Smooth Computer Use)** decouples the agent's actions from physical hardware input. Built directly against macOS private graphics subsystems (`SkyLight`) and semantic accessibility primitives (`AXUIElement`), it executes complete desktop control workflows entirely in the background while rendering an independent, display-synchronized virtual cursor overlay.
 
 The repository is structured as a self-contained Agent Skill: cloning it into your agent's skill path provides immediate capability without external runtime dependencies.
 
@@ -52,22 +50,22 @@ Send the corresponding instruction block directly to your agent in chat.
 #### For Google Antigravity
 
 ```text
-Please install the Smooth Computer Use skill:
-1. Clone https://github.com/syy-shark/smooth-computer-use to ~/.gemini/config/skills/smooth-computer-use
-2. Run ~/.gemini/config/skills/smooth-computer-use/cu doctor to verify permissions.
+Please install the SCU (Smooth Computer Use) skill:
+1. Clone https://github.com/syy-shark/scu to ~/.gemini/config/skills/scu
+2. Run ~/.gemini/config/skills/scu/cu doctor to verify permissions.
 ```
 
 #### For Cursor
 
 ```text
-Please install the Smooth Computer Use skill:
-1. Clone https://github.com/syy-shark/smooth-computer-use to ~/.cursor/skills/smooth-computer-use
-2. Run ~/.cursor/skills/smooth-computer-use/cu doctor to verify permissions.
+Please install the SCU (Smooth Computer Use) skill:
+1. Clone https://github.com/syy-shark/scu to ~/.cursor/skills/scu
+2. Run ~/.cursor/skills/scu/cu doctor to verify permissions.
 ```
 
 > **Shared installation**: If using both environments, clone to one path and link to the other:
 > ```bash
-> ln -s ~/.gemini/config/skills/smooth-computer-use ~/.cursor/skills/smooth-computer-use
+> ln -s ~/.gemini/config/skills/scu ~/.cursor/skills/scu
 > ```
 
 ---
@@ -118,7 +116,7 @@ The agent executes the loop defined in `SKILL.md`: `Inspect UI state -> Locate e
 ```
 Agent Environment (Antigravity / Cursor)
       │
-      │  Executes skill command (or JSON-RPC via stdio)
+      │  Executes skill command
       ▼
    cu wrapper (Auto-builds native binary on first use)
       │
@@ -188,45 +186,6 @@ cu stop                                         # Terminate running background d
 **Global flags**:
 - `--no-cursor`: Suppress the visual virtual cursor overlay.
 - `--speed <float>`: Multiplier for trajectory movement speed (default: `1.0`).
-
----
-
-## MCP server (Optional)
-
-In addition to acting as an Agent Skill, `smooth-computer-use` exposes a standard Model Context Protocol (MCP) server over `stdio`.
-
-### Configuration
-
-Add the following definition to your MCP configuration file (`~/.cursor/mcp.json` for Cursor, or Antigravity MCP settings):
-
-```json
-{
-  "mcpServers": {
-    "computer-use": {
-      "command": "/absolute/path/to/smooth-computer-use/smooth-computer-use",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-*(Ensure the binary is compiled prior to MCP registration by running `./cu doctor` once).*
-
-### Supported MCP tools
-
-- `list_apps`: Enumerate active desktop applications.
-- `get_app_state`: Retrieve structured accessibility nodes with sequential index IDs.
-- `click`: Target click by ID, text query, or coordinate pair.
-- `type_text`: Unicode text injection with automatic focus acquisition and optional `submit` (Return key).
-- `press_key`: Key chords and navigation strokes (`cmd+c`, `return`, `escape`).
-- `set_value`: Assign programmatic values to UI inputs.
-- `scroll`: Adaptive viewport scrolling.
-- `drag`: Coordinate-bounded dragging.
-- `hover`: Pointer position inspection.
-- `perform_secondary_action`: Accessibility actions (`AXShowMenu`, `AXIncrement`, etc.).
-- `open_app` / `open_url`: Background application launch or URL navigation.
-- `screenshot`: Window or display frame capture.
-- `wait`: Temporal UI synchronization.
 
 ---
 

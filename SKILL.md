@@ -1,9 +1,9 @@
 ---
-name: smooth-computer-use
-description: Operate any macOS app in the background like a human — read its UI, click buttons, type text (incl. Chinese), send chat messages, press shortcuts, scroll, take window screenshots — WITHOUT moving the user's real mouse or stealing focus, with a smooth Codex-style agent cursor overlay. Use whenever the user asks to control/operate/use a Mac app or website on their screen (WeChat/微信, Cursor, Chrome, Safari, Calculator, Notes, Finder, System Settings…), e.g. "帮我在微信发消息", "在 Chrome 打开 B 站点第一个视频", "click the Send button", "computer use".
+name: scu
+description: Operate any macOS app in the background like a human — read its UI, click buttons, type text (incl. Chinese), send chat messages, press shortcuts, scroll, take window screenshots — WITHOUT moving the user's real mouse or stealing focus, with a smooth Codex-style agent cursor overlay. Use whenever the user asks to control/operate/use a Mac app or website on their screen (WeChat/微信, Cursor, Chrome, Safari, Calculator, Notes, Finder, System Settings…), e.g. "帮我在微信发消息", "在 Chrome 打开 B 站点第一个视频", "click the Send button", "computer use", "scu".
 ---
 
-# Smooth Computer Use
+# SCU (Smooth Computer Use)
 
 Background computer-use for macOS. Everything goes through one command:
 

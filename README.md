@@ -2,7 +2,7 @@
 
 **简体中文** · [English](README_en.md)
 
-# Smooth Computer Use
+# SCU
 
 ### 专为 macOS Agent 构建的非侵入式、显示同步计算机操控引擎。
 
@@ -11,10 +11,9 @@
 [![Platform](https://img.shields.io/badge/平台-macOS%2014%2B-black?style=flat-square&logo=apple&logoColor=white)](#系统要求)
 [![Swift](https://img.shields.io/badge/语言-Swift%205-F05138?style=flat-square&logo=swift&logoColor=white)](#系统要求)
 [![Interface](https://img.shields.io/badge/接口-Agent%20Skill-5c4ee5?style=flat-square)](#快速开始)
-[![Protocol](https://img.shields.io/badge/协议-MCP%20stdio-blue?style=flat-square)](#mcp-服务器可选)
 [![License](https://img.shields.io/badge/协议-MIT-f4c430?style=flat-square)](LICENSE)
 
-[快速开始](#快速开始) · [核心特性](#核心特性) · [系统架构](#系统架构) · [命令速查](#命令速查) · [MCP 服务器](#mcp-服务器可选) · [局限性说明](#局限性说明)
+[快速开始](#快速开始) · [核心特性](#核心特性) · [系统架构](#系统架构) · [命令速查](#命令速查) · [系统要求](#系统要求) · [局限性说明](#局限性说明)
 
 </div>
 
@@ -22,7 +21,7 @@
 
 传统的视觉 Computer Use 机制通常直接抢占用户的硬件鼠标指针、强制前台激活窗口，并产生突兀的坐标瞬移。只要用户在 Agent 执行任务期间操作机器，就会造成输入竞态与点击失准。
 
-Smooth Computer Use 将 Agent 操作与物理硬件输入彻底解耦。本引擎直接基于 macOS 底层私有图形子系统（`SkyLight`）与语义无障碍原语（`AXUIElement`）构建，能够在纯后台环境下完成全套桌面应用控制工作流；同时，独立的半透明虚拟光标层以硬件刷新率同步渲染顺滑的拟人轨迹。
+**SCU (Smooth Computer Use)** 将 Agent 操作与物理硬件输入彻底解耦。本引擎直接基于 macOS 底层私有图形子系统（`SkyLight`）与语义无障碍原语（`AXUIElement`）构建，能够在纯后台环境下完成全套桌面应用控制工作流；同时，独立的半透明虚拟光标层以硬件刷新率同步渲染顺滑的拟人轨迹。
 
 本仓库本身即是一个自包含的标准 Agent Skill：将其克隆至 Agent 的技能目录即可立即生效，无需安装任何额外运行时依赖。
 
@@ -51,22 +50,22 @@ Smooth Computer Use 将 Agent 操作与物理硬件输入彻底解耦。本引�
 #### 适用于 Google Antigravity
 
 ```text
-请帮我安装 Smooth Computer Use 这个 Skill：
-1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/.gemini/config/skills/smooth-computer-use
-2. 运行 ~/.gemini/config/skills/smooth-computer-use/cu doctor 验证环境与权限。
+请帮我安装 SCU (Smooth Computer Use) 这个 Skill：
+1. 把 https://github.com/syy-shark/scu 克隆到 ~/.gemini/config/skills/scu
+2. 运行 ~/.gemini/config/skills/scu/cu doctor 验证环境与权限。
 ```
 
 #### 适用于 Cursor
 
 ```text
-请帮我安装 Smooth Computer Use 这个 Skill：
-1. 把 https://github.com/syy-shark/smooth-computer-use 克隆到 ~/.cursor/skills/smooth-computer-use
-2. 运行 ~/.cursor/skills/smooth-computer-use/cu doctor 验证环境与权限。
+请帮我安装 SCU (Smooth Computer Use) 这个 Skill：
+1. 把 https://github.com/syy-shark/scu 克隆到 ~/.cursor/skills/scu
+2. 运行 ~/.cursor/skills/scu/cu doctor 验证环境与权限。
 ```
 
 > **双环境共享安装**：若需在两套环境中同时使用，只需克隆至一处并建立软链接：
 > ```bash
-> ln -s ~/.gemini/config/skills/smooth-computer-use ~/.cursor/skills/smooth-computer-use
+> ln -s ~/.gemini/config/skills/scu ~/.cursor/skills/scu
 > ```
 
 ---
@@ -117,7 +116,7 @@ Agent 将自动依据 `SKILL.md` 规范执行操作闭环：`检查界面状态 
 ```
 Agent 宿主环境 (Antigravity / Cursor)
       │
-      │  执行 Skill 命令（或通过 stdio 进行 JSON-RPC 交互）
+      │  执行 Skill 封装命令
       ▼
    cu 启动包装器 (首次调用自动编译原生二进制)
       │
@@ -187,45 +186,6 @@ cu stop                                         # 终止后台常驻守护进程
 **全局参数**：
 - `--no-cursor`：关闭可视化的虚拟光标浮层。
 - `--speed <float>`：轨迹移动速度倍率（默认值：`1.0`）。
-
----
-
-## MCP 服务器（可选）
-
-除作为 Agent Skill 外，`smooth-computer-use` 同时支持通过标准 `stdio` 暴露 Model Context Protocol（MCP）服务。
-
-### 配置方式
-
-在你的 MCP 配置文件中（Cursor 对应 `~/.cursor/mcp.json`，或 Antigravity 的 MCP 原生配置项）加入以下声明：
-
-```json
-{
-  "mcpServers": {
-    "computer-use": {
-      "command": "/绝对路径/smooth-computer-use/smooth-computer-use",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-*（首次配置前请先运行一次 `./cu doctor` 生成二进制可执行文件）。*
-
-### 支持的 MCP 工具列表
-
-- `list_apps`：枚举当前运行的桌面应用程序。
-- `get_app_state`：获取带有顺序 ID 的结构化无障碍树节点。
-- `click`：支持通过 ID、文本查询或坐标对目标发起点击。
-- `type_text`：具备自动焦点获取机制的 Unicode 文本注入，支持 `submit` 回车提交。
-- `press_key`：常用按键与组合快捷键派发（`cmd+c`、`return`、`escape` 等）。
-- `set_value`：直接修改控件值。
-- `scroll`：自适应视口滚动。
-- `drag`：坐标范围拖拽。
-- `hover`：光标悬停检查。
-- `perform_secondary_action`：调用特定无障碍辅助动作（`AXShowMenu`、`AXIncrement` 等）。
-- `open_app` / `open_url`：后台启动应用程序或打开目标 URL。
-- `screenshot`：窗口或全屏捕获。
-- `wait`：UI 渲染时序等待。
 
 ---
 
